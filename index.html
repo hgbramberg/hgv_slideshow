@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="HG Bramberg, Yves Ledermann">
+
+    <title>HGV-Slideshow (Slideshow aus der HG Verwaltung)</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="includes/bootstrap-4.2.1/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="includes/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+    <script src="includes/bootstrap-4.2.1/js/bootstrap.min.js"></script>
+
+    <script src="includes/jquery.geturlparam/jquery.getUrlParam.js"></script>
+
+    <!-- Optional Icons / Fonts -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+
+    <!-- Custom styles for this template -->
+    <link href="css/main.css" rel="stylesheet">
+    <link href="css/hgv.css" rel="stylesheet">
+
+    <!-- Mach JS-Warnung sichtbar wenn JS nicht aktiviert -->
+    <noscript>
+      <style>
+        .javascript-warning {
+          display: block;
+        }
+      </style>
+    </noscript>
+
+
+    <!-- JS Funktionen für die Seite
+    <script>
+    
+
+        // Jquery
+        $(document).ready(function(){
+            
+            
+            // Stop normal link behavior
+            return false;
+        });
+        </script>
+    </head>
+-->
+    <body>
+        
+    
+        <main role="main" class="container" id="main-content">
+          <div class="javascript-warning">
+            <!-- Javascript Warning-->
+            <p class="fas fa-exclamation-triangle" style="font-size:150px;color:red"></p>
+            <h1>JavaScript ist deaktiviert</h1>
+            <p class="lead">Bitte aktualisiere deinen Browser<br>
+            oder schalte Javascript ein (resp. deaktiviere deinen Werbeblocker) <br> <br>
+            <strong>Seite benötigt Javascript um korrekt zu funktionieren</strong> 
+            </p>
+          </div>
+
+          
+          <script src="https://hgverwaltung.ch/static/list-1.5.min.js"></script>
+          <script src="https://hgverwaltung.ch/static/hgutil-1.1.js"></script>
+          <script src="https://hgverwaltung.ch/static/tingle-0.15.2.min.js"></script>
+          <link href="https://hgverwaltung.ch/static/tingle-0.15.2.min.css" rel="stylesheet">
+           
+         
+           
+          <select id="hg_teamSelect" size="3" multiple></select>
+          <select id="hg_jahrSelect"></select>
+           
+          <table id="hg_data" style="display: none;">
+              <thead>
+                  <tr>
+                      <th class="sort" data-sort="datum">Datum</th>
+                      <th class="sort" data-sort="zeit">Zeit</th>
+                      <th class="sort" data-sort="art">Anlass</th>
+                      <th class="sort" data-sort="team">Mannschaft</th>
+                      <th class="sort" data-sort="gegner">Gegner</th>
+                      <th class="sort" data-sort="spielort">Spielort</th>
+                      <th></th>
+                  </tr>
+              </thead>
+              <tbody class="hg_list">
+                  <tr>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>
+                  </tr>
+              </tbody>
+              <tfoot>
+                  <tr>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>        
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>        
+                      <td>&nbsp;</td>
+                  </tr>
+              </tfoot>
+          </table>
+           
+          <table style="display: none;">
+              <tr id="hg_tr_template">
+                  <td class="datumDisplay"></td>
+                  <td class="zeit"></td>
+                  <td class="art"></td>
+                  <td class="team"></td>
+                  <td class="gegner"></td>
+                  <td class="spielort"></td>
+                 
+                  <td>
+                      <a href="#" class="spiel"></a>
+                  </td>
+              </tr>
+          </table>
+           
+          <script>
+                  
+
+              (function () {
+                  
+
+
+                  var club = hgutil.getParameterByName('club');
+
+                  var jahr
+                  var teams
+                  var durchschnitt
+                  var spiel
+                  var spielId
+                  var club = 'bramberg'
+
+                  if (!club) {
+                    club = 'test';
+                  }
+
+                  
+
+
+
+
+                  hgutil.loadSelectFromArray('https://www.hgverwaltung.ch/api/1/' + club + '/spiele/jahre', 'hg_jahrSelect', true, getData);
+                  hgutil.loadSelectFromArray('https://www.hgverwaltung.ch/api/1/' + club + '/mannschaften?spiele=true', 'hg_teamSelect', true, getData);
+           
+                  var hgDataTable = document.getElementById("hg_data");
+                  hgDataTable.createTFoot();
+           
+                  var valueNames = [];
+                  var tdElements = document.getElementById('hg_tr_template').getElementsByTagName('td');
+                  for (var v = 0; v < tdElements.length; v++) {
+                      if (tdElements[v].classList.length > 0) {
+                          valueNames.push(tdElements[v].classList[0]);
+                      }
+                  }
+                  valueNames.push({ data: ['id'] });
+                  valueNames.push('spiel');
+           
+                  var options = {
+                      valueNames: valueNames,
+                      listClass: 'hg_list',
+                      item: 'hg_tr_template'
+                  };
+           
+                  var dataList = new List('hg_data', options);
+           
+                  document.getElementById('hg_jahrSelect').addEventListener("change", getData);
+                  document.getElementById('hg_teamSelect').addEventListener("change", getData);
+           
+                 
+                  function getData() {
+                      jahr = document.getElementById('hg_jahrSelect').value;
+                      teams = Array.prototype.slice.call(document.querySelectorAll('#hg_teamSelect option:checked'), 0).map(function (v) {
+                          return v.value;
+                      });
+           
+                      if (jahr && teams && teams.length > 0) {
+                          var url = 'https://www.hgverwaltung.ch/api/1/' + club + '/spiele/' + teams.join(',') + '?jahr=' + jahr;
+                          fetch(url).then(function (response) {
+                              return response.json();
+                          }).then(function (results) {
+                              showData(results);
+                          });
+                      }
+                      else {
+                          showData([]);
+                      }
+                  }
+           
+                  function showData(results) {
+                      dataList.clear();
+           
+                      if (results.length === 0) {
+                          document.getElementById('hg_data').style.display = 'none';
+                          return;
+                      }
+                      document.getElementById('hg_data').style.display = '';
+           
+                      var now = Date.now();
+           
+                      results.forEach(function (row) {
+                          row.datumDisplay = row.datum.substring(8, 10) + '.' + row.datum.substring(5, 7) + '.' + row.datum.substring(0, 4);
+                          row.zeit = row.datum.substring(11);
+                          var sd = new Date(parseInt(row.datum.substring(0, 4)), parseInt(row.datum.substring(5, 7)) - 1, parseInt(row.datum.substring(8, 10)));
+           
+                          if (sd.getTime() <= now) {
+                              row.spiel = 'Spiel auswählen';
+                          }
+                      });
+                      dataList.add(results);
+           
+                      dataList.sort('datum', { order: "asc" });
+           
+                      var i = 0;
+                      var rows = document.getElementById('hg_data').getElementsByTagName('tr');
+                      for (; i < rows.length; i++) {
+                          spielId = rows[i].dataset.id;
+                          if (spielId) {
+                              var atags = rows[i].getElementsByTagName('a');
+                              for (var j = 0; j < atags.length; j++) {
+                                  (function () {
+                                      var atag = atags[j];
+                                      var sid = spielId;
+                                      atag.addEventListener("click", function () {
+                                          var gegner = atag.dataset.gegner;
+                                          selectSlideShow(sid, gegner == '1');
+           
+                                      });
+                                  })();
+                              }
+                          }
+                      }
+                  }
+                  function selectSlideShow(spielId, gegner) {
+                    
+
+                    console.log(spielId + ' ' + gegner);
+                    // window.open("/slideshow.html?spielId="+spielId, "_blank");
+                    var gegnerQuery = '';
+                    if (gegner) {
+                        gegnerQuery = '?gegner=1';
+                    }
+
+                    var url = 'https://www.hgverwaltung.ch/api/1/' + club + '/spiel/' + spielId + gegnerQuery;
+
+                    fetch(url).then(function (response) {
+                        return response.json();
+                    }).then(function (result) {
+                      console.log("get spiel");
+                      console.log(result);
+                      spiel = result;
+                    }).then(function (spiel) {
+                      console.log("then durchschnit");
+                      var url = 'https://www.hgverwaltung.ch/api/1/' + club + '/durchschnitt/' + teams.join(',') + '?inklFoto=true&alle=1' + '&jahr=' + jahr;
+                      fetch(url).then(function (response) {
+                        return response.json();
+                      }).then(function (result) {
+                        console.log("query durchschnitt");
+                        console.log(result);
+                        durchschnitt = result;
+                      }).then(function (){
+                        showSlide();
+                      })
+
+                    });
+                  }
+                  
+                  function showSlide() {
+                    console.log("showSlide");
+                    console.log(spielId);
+                    console.log(spiel);
+
+
+                    template = $.trim($('#jstemplate').html());
+                    //var spieler = JSON.parse(spiel).spieler;
+
+                    /* spiel.spieler.forEach(function(item) {
+                        console.log(item.nachname);
+                        console.log(item.vorname);
+                    }) */
+
+                    $.each(spiel.spieler , function(i,v){
+                        var temp =  template.replace( /{{name}}/ig, v.nachname)
+                                    .replace( /{{vorname}}/ig, v.vorname);
+                        console.log(temp);
+                        $('.slider').append(temp);
+                    });
+                  };
+              })();
+           
+          </script>
+
+
+
+<!--
+
+          <div class="centered-text">
+            <h1>Slideshow aus der HG Verwaltung 2</h1>
+            <p class="lead">Use this document as a way to quickly start any new project.<br> All you get is this text and a mostly barebones HTML document.</p>
+          </div>
+          <div id="slider">
+            
+          </div>
+
+        <div class="container contact-form">
+          <div class="contact-image">
+              <img src="https://image.ibb.co/kUagtU/rocket_contact.png" alt="rocket_contact"/>
+          </div>
+          <form method="post">
+              <h3>Drop Us a Message</h3>
+             <div class="row">
+                  <div class="col-md-6">
+                      <div class="form-group">
+                          <input type="text" name="txtName" class="form-control" placeholder="Your Name *" value="" />
+                      </div>
+                      <div class="form-group">
+                          <input type="text" name="txtEmail" class="form-control" placeholder="Your Email *" value="" />
+                      </div>
+                      <div class="form-group">
+                          <input type="text" name="txtPhone" class="form-control" placeholder="Your Phone Number *" value="" />
+                      </div>
+                      <div class="form-group">
+                          <input type="submit" name="btnSubmit" class="btnContact" value="Send Message" />
+                      </div>
+                  </div>
+                  <div class="col-md-6">
+                      <div class="form-group">
+                          <textarea name="txtMsg" class="form-control" placeholder="Your Message *" style="width: 100%; height: 150px;"></textarea>
+                      </div>
+                  </div>
+              </div>
+          </form>
+        </div>
+        -->
+        </main><!-- /.container -->
+
+        <div class="slider">
+            <script id="jstemplate" type="js/template">
+              <div class="items">
+                      <span class="name"> {{name}} </span> :  <span class="vorname">{{vorname}}</span> 
+                  </div>
+              </script>
+        </div>
+
+
+
+      </body>
+    
+    </html>
